@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8">
+<title>NEO Senior Suite · 인터랙티브 프로토타입</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>/* ─── NEO SENIOR SUITE · Design Tokens (v2 — Toss × 효돌 × Calm) ──── */
+:root {
+  /* mint — warmer, less saturated than v1 */
+  --mint-50:  #ECF8F2;
+  --mint-100: #D4F0E3;
+  --mint-200: #A8E1C5;
+  --mint-300: #6DCB9F;
+  --mint-500: #1FA97A;   /* core — slightly warmer */
+  --mint-600: #128F66;
+  --mint-700: #0C7253;
+  --mint-900: #07423A;
+
+  /* surface — Toss-style off-whites for warmth without saturation */
+  --bg:       #F6F2EA;   /* page background — warmer than #F1ECE2 */
+  --bg-soft:  #FAF7F0;
+  --surface:  #FFFFFF;   /* cards */
+  --surface-2:#F8F6F1;
+
+  /* grey — increased contrast for hierarchy */
+  --gray-0:   #FFFFFF;
+  --gray-50:  #F5F4F1;
+  --gray-100: #ECEAE4;
+  --gray-200: #D9D6CE;
+  --gray-300: #BFBBB1;
+  --gray-400: #98948B;
+  --gray-500: #6E6A62;
+  --gray-600: #4A463F;
+  --gray-700: #2C2924;
+  --gray-900: #15130F;   /* near-black for big titles */
+
+  /* semantic — soft, warm */
+  --warn:   #C8843D;
+  --warn-bg:#FBF1DF;
+  --danger: #B85C5C;
+  --danger-bg:#FBEAEA;
+  --ok:     var(--mint-600);
+
+  /* warm accents (효돌 따뜻함) */
+  --cream:  #FBF6EE;
+  --cream-2:#F4EDE0;
+  --peach:  #F2C8A6;
+
+  /* type */
+  --font: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+           'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif;
+
+  /* radius — slightly bigger, Headspace softness */
+  --r-xs: 10px;
+  --r-sm: 14px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-pill: 999px;
+
+  /* shadow — much flatter (Toss style) */
+  --shadow-sm: 0 1px 2px rgba(20,16,10,.03), 0 2px 4px rgba(20,16,10,.02);
+  --shadow-md: 0 2px 8px rgba(20,16,10,.05), 0 1px 2px rgba(20,16,10,.03);
+  --shadow-lg: 0 8px 24px rgba(20,16,10,.08), 0 2px 6px rgba(20,16,10,.04);
+}
+
+/* base reset inside phone frame */
+.app, .app * { box-sizing: border-box; }
+.app {
+  font-family: var(--font);
+  color: var(--gray-900);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+.app button { font-family: inherit; cursor: pointer; }
+
+/* scrollbar hidden inside frames */
+.app *::-webkit-scrollbar { display: none; }
+.app * { scrollbar-width: none; }
+</style>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg);font-family:'Pretendard Variable',system-ui,sans-serif;color:var(--gray-900);min-height:100vh}
+  .stage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:64px 32px;gap:56px;flex-wrap:wrap}
+  .left{flex:0 0 360px;width:360px;position:sticky;top:64px}
+  .kicker{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--mint-700);text-transform:uppercase}
+  .title{font-size:42px;font-weight:800;letter-spacing:-0.035em;line-height:1.1;margin:12px 0 14px;color:var(--gray-900)}
+  .sub{font-size:15px;color:var(--gray-500);line-height:1.6}
+  .features{display:flex;flex-direction:column;gap:8px;margin-top:32px}
+  .feat{display:flex;gap:14px;padding:18px;border-radius:18px;background:transparent;cursor:pointer;border:1.5px solid transparent;transition:.16s}
+  .feat:hover{background:var(--surface)}
+  .feat.on{background:var(--surface);border-color:var(--mint-500);box-shadow:var(--shadow-sm)}
+  .feat .num{width:30px;height:30px;border-radius:10px;background:var(--gray-100);color:var(--gray-500);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;transition:.16s}
+  .feat.on .num{background:var(--mint-500);color:#fff}
+  .feat .kicker-mini{font-size:11px;font-weight:700;color:var(--gray-400);letter-spacing:.02em;text-transform:uppercase}
+  .feat.on .kicker-mini{color:var(--mint-700)}
+  .feat .name{font-size:16px;font-weight:800;letter-spacing:-0.015em;margin-top:2px;color:var(--gray-900)}
+  .feat .desc{font-size:13px;color:var(--gray-500);margin-top:4px;line-height:1.5}
+  .hint{margin-top:24px;padding:12px 14px;border-radius:12px;background:var(--cream);color:var(--gray-600);font-size:12px;font-weight:600;border:1px solid var(--cream-2)}
+  .right{flex:1;min-width:520px;display:flex;justify-content:center;align-items:flex-start;overflow:hidden}
+
+  /* Scene wraps device + character. Characters are absolutely positioned
+     so they never participate in horizontal layout — fixes overlap with .left */
+  .scene{position:relative;display:flex;align-items:flex-end;gap:24px}
+  .scene.tablet-scene{align-items:center}
+  .scene .bgWash{position:absolute;inset:-40px -80px;border-radius:48px;z-index:0;pointer-events:none}
+
+  /* Phone — flatter shadow */
+  .phone{width:376px;height:780px;border-radius:48px;background:#1a1a1a;padding:14px;box-shadow:0 24px 48px rgba(20,16,10,.10),0 4px 12px rgba(20,16,10,.06);position:relative;z-index:1}
+  .screen{width:100%;height:100%;border-radius:36px;overflow:hidden;background:var(--surface);position:relative}
+  .notch{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:120px;height:30px;border-radius:18px;background:#000;z-index:10}
+  .status{padding:16px 26px 8px;display:flex;justify-content:space-between;font-size:13px;font-weight:700}
+  .content{height:calc(100% - 50px);overflow-y:auto;overflow-x:hidden}
+  .content::-webkit-scrollbar{display:none}
+
+  /* Tablet (landscape) — flatter shadow */
+  .tablet{width:920px;height:660px;border-radius:28px;background:#1a1a1a;padding:14px;box-shadow:0 24px 48px rgba(20,16,10,.10),0 4px 12px rgba(20,16,10,.06);position:relative;z-index:1}
+  .tabletScreen{width:100%;height:100%;border-radius:14px;overflow:hidden;background:var(--bg-soft);position:relative;display:flex}
+  .tabletCam{position:absolute;left:50%;top:6px;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:#333;z-index:10}
+
+  /* Common — bigger type, flatter cards (Toss style) */
+  .pageWrap{padding:20px 22px 100px}
+  .h-kick{font-size:12px;font-weight:700;color:var(--mint-700);letter-spacing:.04em;text-transform:uppercase}
+  .h-title{font-size:28px;font-weight:800;letter-spacing:-0.035em;line-height:1.15;margin-top:6px;color:var(--gray-900)}
+  .card{background:var(--surface);border-radius:18px;padding:18px;box-shadow:var(--shadow-sm)}
+  .btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--gray-900);color:#fff;border:0;border-radius:16px;padding:18px 24px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;width:100%;letter-spacing:-0.01em;transition:.12s}
+  .btn-primary:hover{background:var(--gray-700)}
+  .btn-primary:active{transform:scale(.985)}
+  .btn-mint{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--mint-500);color:#fff;border:0;border-radius:16px;padding:18px 24px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;width:100%;letter-spacing:-0.01em;transition:.12s}
+  .btn-mint:hover{background:var(--mint-600)}
+  .btn-ghost{background:var(--surface);color:var(--gray-700);border:1.5px solid var(--gray-200);border-radius:16px;padding:16px 22px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+  .btn-ghost:hover{background:var(--gray-50);border-color:var(--gray-300)}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:700;background:var(--mint-50);color:var(--mint-700)}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 6px 14px}
+  .iconbtn{width:40px;height:40px;border-radius:50%;background:var(--surface);border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray-700);transition:.12s}
+  .iconbtn:hover{background:var(--gray-50)}
+  .bgMint{background:linear-gradient(180deg,#EBF6F0 0%,var(--surface) 280px)}
+
+  /* Characters removed — device + soft backdrop only */
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+  /* Scene backgrounds */
+  .sceneBg.senior{background:radial-gradient(ellipse at 75% 60%, #E8F5EF 0%, #F1ECE2 60%);}
+  .sceneBg.caregiver{background:radial-gradient(ellipse at 80% 50%, #E6EFFA 0%, #F1ECE2 60%);}
+  .sceneBg.daughter{background:radial-gradient(ellipse at 20% 50%, #EFEAFB 0%, #F1ECE2 60%);}
+
+  @media(max-width:1280px){
+    .tablet{width:720px;height:520px}
+  }
+  @media(max-width:1100px){
+    .left{position:static;flex:0 0 auto;width:100%;max-width:560px}
+    .right{min-width:0;width:100%}
+    .tablet{width:min(720px,92vw);height:auto;aspect-ratio:920/660}
+    .tablet .tabletScreen{height:auto;aspect-ratio:920/660}
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const {useState} = React;
+
+const Ico = {
+  Back: (p)=><svg width={p.s||20} height={p.s||20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>,
+  X: (p)=><svg width={p.s||20} height={p.s||20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>,
+  Play: (p)=><svg width={p.s||16} height={p.s||16} viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7L8 5z"/></svg>,
+  Mic: (p)=><svg width={p.s||16} height={p.s||16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4"/></svg>,
+  Star: (p)=><svg width={p.s||16} height={p.s||16} viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-7z"/></svg>,
+  Plus: (p)=><svg width={p.s||16} height={p.s||16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>,
+  Check: (p)=><svg width={p.s||16} height={p.s||16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11"/></svg>,
+  Doc: (p)=><svg width={p.s||16} height={p.s||16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>,
+  Family: (p)=><svg width={p.s||16} height={p.s||16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 21v-1a3 3 0 0 1 3-3h1"/></svg>,
+  Camera: (p)=><svg width={p.s||16} height={p.s||16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>,
+  Phone: (p)=><svg width={p.s||16} height={p.s||16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+};
+
+// ───── FEATURE 1 · AI 활동 추천 (시니어) ─────
+function Flow_AI({onDone}){
+  const [step,setStep] = useState(0);
+  const screen = ['home','activity','result'][step];
+
+  if(screen==='home') return (
+    <div className="bgMint" style={{minHeight:'100%'}}>
+      <div className="pageWrap">
+        <div className="topbar">
+          <div>
+            <div className="h-kick">5월 11일 월요일</div>
+            <div className="h-title">안녕하세요,<br/><span style={{color:'var(--mint-700)'}}>한영희</span>님</div>
+          </div>
+          <button className="iconbtn"><span style={{fontSize:18,fontWeight:900}}>≡</span></button>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:10,background:'#fff',padding:'10px 14px',borderRadius:14,boxShadow:'var(--shadow-sm)'}}>
+          <div style={{width:36,height:36,borderRadius:12,background:'var(--mint-500)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center'}}><Ico.Star/></div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:800}}>Pro 등급 80%</div>
+            <div style={{fontSize:11,color:'var(--gray-500)'}}>이번주 활동 4 / 5회</div>
+          </div>
+          <div style={{width:60,height:6,background:'var(--mint-50)',borderRadius:99}}>
+            <div style={{width:'80%',height:'100%',background:'var(--mint-500)',borderRadius:99}}/>
+          </div>
+        </div>
+        <div style={{marginTop:18}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+            <span className="pill">✨ AI 맞춤 추천</span>
+            <span style={{fontSize:11,color:'var(--gray-500)',fontWeight:600}}>어제 활동 기반</span>
+          </div>
+          <button onClick={()=>setStep(1)} style={{width:'100%',textAlign:'left',padding:0,border:0,background:'transparent',cursor:'pointer',fontFamily:'inherit'}}>
+            <div style={{borderRadius:22,overflow:'hidden',background:'linear-gradient(160deg,#F8EFD9 0%,#F2E1B8 100%)',padding:'22px 20px 20px'}}>
+              <div style={{fontSize:11,fontWeight:700,color:'#8C6F3F',letterSpacing:'.04em',textTransform:'uppercase'}}>오늘의 활동</div>
+              <div style={{fontSize:26,fontWeight:800,letterSpacing:'-0.035em',lineHeight:1.15,marginTop:8,color:'#2D2110'}}>하루 10분<br/>가벼운 손가락 체조</div>
+              <div style={{display:'flex',gap:6,marginTop:14}}>
+                {['소근육','인지','10분'].map(t=><span key={t} style={{padding:'5px 12px',borderRadius:999,background:'rgba(255,255,255,.6)',fontSize:11,fontWeight:700,color:'#8C6F3F'}}>{t}</span>)}
+              </div>
+              <div style={{marginTop:18,padding:'16px 18px',background:'var(--gray-900)',color:'#fff',borderRadius:14,fontSize:15,fontWeight:800,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                <Ico.Play s={14}/> 시작하기
+              </div>
+            </div>
+          </button>
+        </div>
+        {/* 오늘 일정 */}
+        <div className="card" style={{marginTop:12}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+            <div style={{fontSize:13,fontWeight:800,letterSpacing:'-0.01em'}}>오늘 일정</div>
+            <span style={{fontSize:11,color:'var(--mint-700)',fontWeight:700}}>2 / 4 완료</span>
+          </div>
+          {[
+            ['09:30','약 복용 · 혈압약','done'],
+            ['10:15','손가락 체조 (AI 추천)','now'],
+            ['12:00','점심 식사',''],
+            ['15:00','복지관 산책',''],
+          ].map(([t,n,s],i)=>(
+            <div key={i} style={{display:'flex',gap:10,alignItems:'center',padding:'8px 0',borderTop:i?'1px solid #F0EDE3':'none'}}>
+              <div style={{width:8,height:8,borderRadius:'50%',background:s==='done'?'var(--mint-500)':s==='now'?'#F5B043':'#E0DDD3'}}/>
+              <div style={{minWidth:46,fontSize:11,fontWeight:800,color:'var(--gray-500)'}}>{t}</div>
+              <div style={{flex:1,fontSize:13,fontWeight:s==='now'?800:700,color:s==='done'?'var(--gray-400)':'var(--gray-900)',textDecoration:s==='done'?'line-through':'none'}}>{n}</div>
+              {s==='now'&&<span style={{fontSize:10,padding:'2px 8px',background:'#FFF3DA',color:'#8C6F3F',borderRadius:99,fontWeight:800}}>곧</span>}
+            </div>
+          ))}
+        </div>
+
+        {/* 딸 지수 메세지 */}
+        <div style={{marginTop:12,padding:14,borderRadius:18,background:'linear-gradient(135deg,#F5C9A6,#FBE3CD)',color:'#3D2F18'}}>
+          <div style={{display:'flex',gap:10,alignItems:'flex-start'}}>
+            <div style={{width:36,height:36,borderRadius:'50%',background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>👧</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                <span style={{fontSize:12,fontWeight:800,color:'#7A5630'}}>딸 지수</span>
+                <span style={{fontSize:10,color:'#A88458',fontWeight:700}}>· 10분 전</span>
+              </div>
+              <div style={{fontSize:13,fontWeight:700,marginTop:6,lineHeight:1.5,color:'#3D2F18'}}>"엄마 오늘 날씨도 좋은데 산책 다녀오세요 :) 주말에 볼게요!"</div>
+            </div>
+          </div>
+          <button style={{marginTop:10,width:'100%',padding:'10px',background:'#fff',color:'#8C6F3F',border:0,borderRadius:12,fontWeight:800,fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>답장하기</button>
+        </div>
+
+        {/* 건강수업 */}
+        <div style={{marginTop:12}} className="card">
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div style={{fontSize:11,fontWeight:800,color:'var(--mint-700)'}}>건강수업 · 음성</div>
+            <span style={{fontSize:11,fontWeight:800,color:'var(--mint-600)'}}>▶ 3분</span>
+          </div>
+          <div style={{fontSize:16,fontWeight:800,marginTop:4,letterSpacing:'-0.02em'}}>치매의 다양한 원인</div>
+          <div style={{fontSize:12,color:'var(--gray-500)',marginTop:4}}>오늘 4명의 어르신이 듣고 있어요</div>
+        </div>
+
+        {/* 이번주 활동 */}
+        <div className="card" style={{marginTop:12}}>
+          <div style={{fontSize:13,fontWeight:800,letterSpacing:'-0.01em',marginBottom:8}}>이번주 활동</div>
+          <div style={{display:'flex',gap:6,alignItems:'flex-end',height:60}}>
+            {['월','화','수','목','금','토','일'].map((d,i)=>{
+              const h=[60,80,40,90,75,0,0][i];
+              const done=i<5;
+              return <div key={d} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+                <div style={{width:'70%',height:done?h+'%':4,background:done?(i===4?'var(--mint-600)':'var(--mint-300)'):'#E0DDD3',borderRadius:4,minHeight:4}}/>
+                <div style={{fontSize:9,color:i===4?'var(--mint-700)':'var(--gray-500)',fontWeight:i===4?800:700}}>{d}</div>
+              </div>
+            })}
+          </div>
+          <div style={{marginTop:8,fontSize:11,color:'var(--gray-500)',display:'flex',justifyContent:'space-between'}}>
+            <span>오늘 <b style={{color:'var(--mint-700)'}}>3건</b> 완료</span>
+            <span>이번주 14건</span>
+          </div>
+        </div>
+
+        {/* 응급 호출 */}
+        <button style={{marginTop:12,width:'100%',padding:'12px',background:'#FBEAEA',color:'#C44',border:0,borderRadius:14,fontSize:13,fontWeight:800,cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+          🆘 도움이 필요해요
+        </button>
+      </div>
+    </div>
+  );
+
+  if(screen==='activity') return (
+    <div style={{minHeight:'100%',background:'#F7FAF8'}}>
+      <div style={{padding:'14px 18px 0',display:'flex',justifyContent:'space-between'}}>
+        <button onClick={()=>setStep(0)} className="iconbtn"><Ico.Back/></button>
+        <button onClick={onDone} className="iconbtn"><Ico.X/></button>
+      </div>
+      <div style={{padding:'8px 24px'}}>
+        <div className="h-kick">오늘의 활동</div>
+        <div style={{fontSize:30,fontWeight:800,letterSpacing:'-0.03em',lineHeight:1.15,marginTop:6}}>하루 10분<br/>가벼운 손가락 체조</div>
+      </div>
+      <div style={{margin:'18px 18px 0',borderRadius:24,background:'linear-gradient(180deg,#E9D8B4,#D9C193)',padding:'20px 18px 18px',position:'relative',height:380,overflow:'hidden'}}>
+        <div style={{textAlign:'center',padding:'4px 14px',background:'rgba(255,255,255,.7)',borderRadius:999,fontSize:13,fontWeight:800,width:'fit-content',margin:'0 auto'}}>머리 위로 팔 당기기</div>
+        <div style={{fontSize:88,fontWeight:800,textAlign:'center',color:'#fff',marginTop:24,lineHeight:1,letterSpacing:'-0.04em',textShadow:'0 2px 12px rgba(60,40,10,.18)'}}>9</div>
+        <svg viewBox="0 0 200 160" style={{display:'block',margin:'10px auto 0',width:160}}>
+          <ellipse cx="100" cy="50" rx="22" ry="22" fill="#8C6F3F"/>
+          <path d="M70 70 Q100 60 130 70 L140 130 Q100 140 60 130 Z" fill="#8C6F3F"/>
+          <path d="M75 75 L65 35 L85 50" stroke="#8C6F3F" strokeWidth="14" fill="none" strokeLinecap="round"/>
+          <path d="M125 75 L135 35 L115 50" stroke="#8C6F3F" strokeWidth="14" fill="none" strokeLinecap="round"/>
+        </svg>
+        <div style={{position:'absolute',bottom:12,left:14,right:14,background:'rgba(255,255,255,.78)',padding:'10px 14px',borderRadius:14,fontSize:13,fontWeight:700,textAlign:'center',color:'#3D2F18'}}>왼팔을 머리 뒤로 넘기고<br/>오른손으로 팔꿈치를 살짝 당겨주세요</div>
+      </div>
+      <div style={{margin:'14px 18px 0',display:'flex',gap:8}}>
+        <button className="btn-ghost" style={{flex:1}}>일시정지</button>
+        <button onClick={()=>setStep(2)} className="btn-primary" style={{flex:1.4}}>완료</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{minHeight:'100%',background:'linear-gradient(180deg,#E8F5EF,#fff 320px)',padding:'40px 24px 80px'}}>
+      <div style={{width:96,height:96,borderRadius:'50%',background:'var(--mint-500)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',margin:'24px auto'}}>
+        <Ico.Check s={48}/>
+      </div>
+      <div style={{textAlign:'center'}}>
+        <div className="h-kick">활동 완료</div>
+        <div style={{fontSize:26,fontWeight:800,letterSpacing:'-0.03em',marginTop:4}}>잘 하셨어요,<br/>한영희님!</div>
+        <div style={{fontSize:14,color:'var(--gray-500)',marginTop:8}}>10분 손가락 체조 · 자동 기록되었어요</div>
+      </div>
+      <div className="card" style={{marginTop:24}}>
+        <div style={{fontSize:12,color:'var(--gray-500)',fontWeight:700,marginBottom:8}}>오늘 기분은 어떠세요?</div>
+        <div style={{display:'flex',justifyContent:'space-around'}}>
+          {['😄','🙂','😐'].map((e,i)=><button key={i} style={{border:0,background:'transparent',cursor:'pointer',fontSize:36}}>{e}</button>)}
+        </div>
+      </div>
+      <button onClick={()=>setStep(0)} className="btn-primary" style={{marginTop:20}}>홈으로 돌아가기</button>
+    </div>
+  );
+}
+
+// ───── FEATURE 2 · 워크지 자동 생성 (종사자 — 태블릿) ─────
+function Flow_Worksheet_Tablet({onDone}){
+  const [step,setStep] = useState(0);
+  const [topic,setTopic] = useState('겨울 간식 맞추기');
+  const [level,setLevel] = useState('중급');
+  const [prefer,setPrefer] = useState('이미지+텍스트');
+  const [target,setTarget] = useState('한영희');
+
+  const Sidebar = ()=>(
+    <div style={{width:220,background:'var(--surface)',borderRight:'1px solid var(--gray-100)',padding:'22px 16px',display:'flex',flexDirection:'column',gap:18}}>
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        <div style={{width:40,height:40,borderRadius:'50%',background:'linear-gradient(135deg,var(--mint-500),var(--mint-600))',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14}}>손</div>
+        <div>
+          <div style={{fontSize:14,fontWeight:800,letterSpacing:'-0.015em',color:'var(--gray-900)'}}>손고은</div>
+          <div style={{fontSize:11,color:'var(--gray-500)',marginTop:1}}>요양보호사 · 5년차</div>
+        </div>
+      </div>
+      <div style={{padding:'12px 14px',background:'var(--mint-50)',borderRadius:12,display:'flex',alignItems:'center',gap:8}}>
+        <div style={{width:6,height:6,borderRadius:99,background:'var(--mint-500)',boxShadow:'0 0 0 4px rgba(31,169,122,.15)'}}/>
+        <div>
+          <div style={{fontSize:11,fontWeight:700,color:'var(--mint-700)',letterSpacing:'-0.01em'}}>오전 근무중</div>
+          <div style={{fontSize:10,color:'var(--gray-600)',marginTop:1}}>09:00 — 13:00</div>
+        </div>
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:2}}>
+        {[
+          ['담당 시니어','8',false,'count'],
+          ['오늘 일정','12',false,'count'],
+          ['워크지 생성',null,true,null],
+          ['활동 기록','24',false,'count'],
+          ['인계 노트','2',false,'unread'],
+        ].map(([n,c,on,kind])=>{
+          const isUnread = kind==='unread';
+          return (
+          <div key={n} style={{padding:'11px 12px',borderRadius:10,background:on?'var(--gray-900)':'transparent',color:on?'#fff':'var(--gray-700)',fontSize:13,fontWeight:on?800:600,display:'flex',justifyContent:'space-between',alignItems:'center',letterSpacing:'-0.01em',cursor:'pointer',transition:'.12s'}}>
+            {n}{c&&<span style={{fontSize:10,padding:'2px 7px',borderRadius:99,
+              background: isUnread ? 'var(--warn)' : (on?'rgba(255,255,255,.18)':'var(--gray-100)'),
+              color: isUnread ? '#fff' : (on?'#fff':'var(--gray-500)'),
+              fontWeight:800
+            }}>{c}</span>}
+          </div>
+        )})}
+      </div>
+      <div style={{fontSize:10,color:'var(--gray-400)',padding:'0 4px',marginTop:'auto',lineHeight:1.5,display:'flex',alignItems:'center',gap:6}}>
+        <span style={{display:'inline-block',width:6,height:6,borderRadius:99,background:'var(--warn)'}}/>확인 필요
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{width:'100%',height:'100%',display:'flex',background:'#F4F7FB'}}>
+      <Sidebar/>
+      <div style={{flex:1,overflow:'auto',padding:'24px 28px'}}>
+        {/* topbar */}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:22}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:'var(--mint-700)',letterSpacing:'.04em',textTransform:'uppercase'}}>워크지 자동 생성</div>
+            <div style={{fontSize:24,fontWeight:800,letterSpacing:'-0.035em',marginTop:4,lineHeight:1.15,color:'var(--gray-900)'}}>30초, 한 사람만을 위한 워크지</div>
+          </div>
+          <div style={{display:'flex',gap:10,alignItems:'center'}}>
+            <div style={{padding:'8px 14px',background:'var(--surface)',borderRadius:99,fontSize:12,fontWeight:600,color:'var(--gray-500)',border:'1px solid var(--gray-100)'}}>2025.05.11 09:42</div>
+            <button onClick={onDone} className="iconbtn"><Ico.X/></button>
+          </div>
+        </div>
+
+        {step===0 && <Step0_Pick {...{target,setTarget,setStep}}/>}
+        {step===1 && <Step1_Form {...{topic,setTopic,level,setLevel,prefer,setPrefer,target,setStep}}/>}
+        {step===2 && <Step2_Generating/>}
+        {step===3 && <Step3_Preview {...{topic,level,prefer,target,setStep}}/>}
+      </div>
+    </div>
+  );
+
+  function Step0_Pick({target,setTarget,setStep}){
+    const seniors=[
+      ['한영희','74','경증인지장애','#FFE2D6','어제 추억회상 ★4.5','이미지 위주'],
+      ['김덕수','78','고혈압 관찰','#DDEEFF','3일 전 옛노래 ★4.0','이미지+텍스트'],
+      ['박순례','82','경증치매','#E4E7F8','오늘 미진행','이미지 위주'],
+      ['이만호','81','당뇨 관리','#E0F3EA','어제 시장이름 ★3.5','텍스트 위주'],
+      ['최금자','79','관절염','#FBEAEA','2일 전 손체조 ★5.0','이미지+텍스트'],
+      ['정복희','76','일반','#EFEAFB','오늘 미진행','이미지+텍스트'],
+    ];
+    return <>
+      <div style={{marginBottom:18}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+          <div style={{fontSize:11,fontWeight:800,color:'var(--mint-700)',letterSpacing:'.04em'}}>STEP 1 / 4</div>
+          <div style={{display:'flex',gap:3}}>
+            {[0,1,2,3].map(i=><div key={i} style={{width:24,height:3,borderRadius:2,background:i===0?'var(--mint-500)':'var(--gray-200)'}}/>)}
+          </div>
+        </div>
+        <div style={{fontSize:22,fontWeight:800,letterSpacing:'-0.025em',color:'var(--gray-900)',lineHeight:1.2}}>어떤 어르신께 드릴<br/>워크지인가요?</div>
+        <div style={{fontSize:13,color:'var(--gray-500)',marginTop:6,lineHeight:1.5}}>지난 활동·선호 반응을 반영해 자동 생성됩니다</div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,paddingBottom:12}}>
+        {seniors.map(([n,a,d,c,last,pref])=>{
+          const sel = target===n;
+          const noToday = last==='오늘 미진행';
+          return (
+          <button key={n} onClick={()=>{setTarget(n);setStep(1)}} style={{padding:16,border:sel?'1.5px solid var(--mint-500)':'1.5px solid var(--gray-100)',background:sel?'var(--mint-50)':'var(--surface)',borderRadius:16,cursor:'pointer',textAlign:'left',fontFamily:'inherit',transition:'.14s'}}>
+            <div style={{display:'flex',gap:12,alignItems:'center'}}>
+              <div style={{width:44,height:44,borderRadius:'50%',background:c,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,color:'#5b3a20',flexShrink:0,fontSize:15}}>{n[0]}</div>
+              <div style={{minWidth:0}}>
+                <div style={{fontSize:15,fontWeight:800,letterSpacing:'-0.015em',color:'var(--gray-900)'}}>{n}</div>
+                <div style={{fontSize:11,color:'var(--gray-500)',marginTop:1}}>{a}세 · {d}</div>
+              </div>
+            </div>
+            <div style={{marginTop:12,paddingTop:12,borderTop:'1px solid var(--gray-100)',fontSize:11,lineHeight:1.5}}>
+              <div style={{color:noToday?'var(--warn)':'var(--gray-700)',fontWeight:700,display:'flex',alignItems:'center',gap:4}}>
+                <span style={{display:'inline-block',width:5,height:5,borderRadius:99,background:noToday?'var(--warn)':'var(--mint-500)'}}/>{last}
+              </div>
+              <div style={{color:'var(--gray-500)',marginTop:3}}>{pref}</div>
+            </div>
+          </button>
+        )})}
+      </div>
+    </>;
+  }
+
+  function Step1_Form({topic,setTopic,level,setLevel,prefer,setPrefer,target,setStep}){
+    return <div style={{display:'grid',gridTemplateColumns:'1fr 220px',gap:14}}>
+      <div>
+        <div style={{padding:'10px 12px',background:'#fff',borderRadius:12,fontSize:12,fontWeight:700,marginBottom:12,display:'flex',justifyContent:'space-between',boxShadow:'var(--shadow-sm)'}}>
+          <span>대상: <b>{target} 어르신</b></span>
+          <button onClick={()=>setStep(0)} style={{border:0,background:'transparent',color:'var(--mint-700)',fontWeight:800,fontSize:11,cursor:'pointer'}}>변경 →</button>
+        </div>
+        <div className="card"><div style={{fontSize:11,color:'var(--gray-500)',fontWeight:700,marginBottom:6}}>1. 주제</div>
+          <input value={topic} onChange={e=>setTopic(e.target.value)} style={{border:0,background:'transparent',fontSize:18,fontWeight:800,width:'100%',outline:'none',fontFamily:'inherit',letterSpacing:'-0.01em'}}/>
+          <div style={{display:'flex',gap:6,marginTop:8,flexWrap:'wrap'}}>
+            {['겨울 간식 맞추기','어릴 적 기억','옛 노래 가사','시장 물건 이름'].map(t=>(
+              <button key={t} onClick={()=>setTopic(t)} style={{padding:'5px 10px',border:0,borderRadius:99,background:topic===t?'var(--mint-600)':'#F4F7FB',color:topic===t?'#fff':'var(--gray-700)',fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
+            ))}
+          </div>
+        </div>
+        <div className="card" style={{marginTop:10}}><div style={{fontSize:11,color:'var(--gray-500)',fontWeight:700,marginBottom:8}}>2. 난이도</div>
+          <div style={{display:'flex',gap:6}}>{['초급','중급','고급'].map(o=><button key={o} onClick={()=>setLevel(o)} style={{flex:1,padding:'10px',border:0,borderRadius:10,background:level===o?'var(--mint-600)':'#F4F7FB',color:level===o?'#fff':'var(--gray-700)',fontWeight:800,fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>{o}</button>)}</div>
+        </div>
+        <div className="card" style={{marginTop:10}}><div style={{fontSize:11,color:'var(--gray-500)',fontWeight:700,marginBottom:8}}>3. 선호도</div>
+          <div style={{display:'flex',gap:6}}>{['이미지 위주','이미지+텍스트','텍스트 위주'].map(o=><button key={o} onClick={()=>setPrefer(o)} style={{flex:1,padding:'10px 6px',border:0,borderRadius:10,background:prefer===o?'var(--mint-600)':'#F4F7FB',color:prefer===o?'#fff':'var(--gray-700)',fontWeight:800,fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>{o}</button>)}</div>
+        </div>
+        <button onClick={()=>{setStep(2);setTimeout(()=>setStep(3),1400)}} className="btn-primary" style={{marginTop:14,width:'auto',padding:'14px 24px'}}><Ico.Plus s={14}/>워크지 생성</button>
+      </div>
+      <div>
+        <div style={{fontSize:11,fontWeight:800,color:'var(--gray-500)',marginBottom:6,letterSpacing:'-0.01em'}}>미리보기</div>
+        <div style={{background:'#fff',borderRadius:8,padding:'18px 14px',aspectRatio:'1 / 1.41',boxShadow:'0 10px 24px rgba(0,0,0,.08)'}}>
+          <div style={{fontSize:13,fontWeight:800,borderBottom:'2px solid var(--mint-500)',paddingBottom:6,letterSpacing:'-0.01em'}}>{topic}</div>
+          <div style={{fontSize:9,color:'var(--gray-500)',marginTop:4}}>{target} 어르신 · {level} · {prefer}</div>
+          <div style={{marginTop:10,fontSize:10,color:'var(--gray-400)'}}>입력값에 따라 실시간 변경됩니다</div>
+        </div>
+      </div>
+    </div>;
+  }
+
+  function Step2_Generating(){return (
+    <div style={{height:420,background:'#fff',borderRadius:18,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:18}}>
+      <div style={{width:64,height:64,borderRadius:'50%',background:'var(--mint-50)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--mint-600)',animation:'pulse 1s infinite'}}>
+        <Ico.Doc s={28}/>
+      </div>
+      <div style={{textAlign:'center'}}>
+        <div className="h-kick">AI가 만드는 중</div>
+        <div style={{fontSize:20,fontWeight:800,letterSpacing:'-0.03em',marginTop:4}}>워크지 PDF 생성하고 있어요</div>
+      </div>
+    </div>
+  )}
+
+  function Step3_Preview({topic,level,prefer,target,setStep}){
+    return <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,paddingBottom:12}}>
+      <div>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+          <button onClick={()=>setStep(1)} className="iconbtn"><Ico.Back/></button>
+          <div className="h-kick">생성 완료</div>
+        </div>
+        <div style={{fontSize:24,fontWeight:800,letterSpacing:'-0.03em',lineHeight:1.15}}>{topic}<br/><span style={{fontSize:14,fontWeight:700,color:'var(--gray-500)'}}>{target} · {level} · {prefer}</span></div>
+        <div style={{marginTop:14,display:'flex',flexDirection:'column',gap:8}}>
+          <button className="btn-primary"><Ico.Doc s={14}/>PDF 다운로드</button>
+          <button className="btn-ghost" style={{width:'100%'}}>시니어 태블릿으로 전송</button>
+          <button className="btn-ghost" style={{width:'100%'}}>인쇄</button>
+        </div>
+        <div style={{marginTop:14,padding:12,background:'#fff',borderRadius:12,fontSize:11,color:'var(--gray-500)',lineHeight:1.5}}>
+          ✨ 이 워크지는 <b>{target}</b> 어르신의 활동 기록과 선호도를 반영해 자동 생성되었습니다.
+        </div>
+      </div>
+      <div style={{background:'#EFE9DF',borderRadius:18,padding:14}}>
+        <div style={{background:'#fff',borderRadius:8,padding:'24px 22px',aspectRatio:'1 / 1.41',boxShadow:'0 10px 24px rgba(0,0,0,.08)'}}>
+          <div style={{fontSize:16,fontWeight:800,borderBottom:'2px solid var(--mint-500)',paddingBottom:8}}>{topic}</div>
+          <div style={{fontSize:11,color:'var(--gray-500)',marginTop:6}}>{target} 어르신 · 2025년 5월</div>
+          <div style={{marginTop:14,fontSize:13,fontWeight:700}}>Q1. 그림과 어울리는 이름을 골라주세요</div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginTop:10}}>
+            {[['🍠','군고구마'],['🥟','만두'],['🫘','팥죽'],['🍢','어묵']].map(([e,w],i)=>(
+              <div key={i} style={{display:'flex',flexDirection:'column',gap:4,alignItems:'center',minWidth:0}}>
+                <div style={{width:'100%',aspectRatio:'1',background:'#F6F2EA',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26}}>{e}</div>
+                <div style={{padding:'2px 6px',background:'var(--mint-50)',color:'var(--mint-700)',borderRadius:6,fontSize:10,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%'}}>{w}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{marginTop:14,fontSize:12,fontWeight:700}}>Q2. 어머니께 군고구마 만드는 법을 들려주세요</div>
+          <div style={{marginTop:6,height:48,border:'1px dashed #ccc',borderRadius:6,background:'#fafafa'}}/>
+        </div>
+      </div>
+    </div>;
+  }
+}
+
+// ───── FEATURE 3 · 안심 리포트 (보호자) ─────
+function Flow_Family({onDone}){
+  const [step,setStep] = useState(0);
+
+  if(step===0) return (
+    <div style={{minHeight:'100%',background:'linear-gradient(180deg,#E8F5EF,#F7FAF8 280px)',padding:'14px 18px 40px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+        <div>
+          <div style={{fontSize:12,fontWeight:800,color:'var(--mint-700)'}}>오늘의 안심 리포트</div>
+          <div style={{fontSize:22,fontWeight:800,letterSpacing:'-0.03em',marginTop:4,lineHeight:1.15}}>한영희 어르신<br/><span style={{color:'var(--mint-700)'}}>보호자</span>님</div>
+        </div>
+        <button onClick={onDone} className="iconbtn"><Ico.X/></button>
+      </div>
+      <button onClick={()=>setStep(1)} style={{width:'100%',marginTop:14,padding:0,border:0,background:'transparent',cursor:'pointer',fontFamily:'inherit'}}>
+        <div style={{borderRadius:20,background:'linear-gradient(135deg,#D7EDE3,#EFF8F4)',padding:18,textAlign:'left'}}>
+          <div style={{fontSize:11,fontWeight:800,color:'var(--mint-700)'}}>오늘 어머님</div>
+          <div style={{fontSize:24,fontWeight:800,letterSpacing:'-0.03em',marginTop:4,lineHeight:1.15,color:'var(--mint-900)'}}>기분 최고 · 건강 안정</div>
+          <div style={{display:'flex',gap:6,marginTop:12,flexWrap:'wrap'}}>
+            <span style={{padding:'5px 10px',borderRadius:999,background:'#fff',fontSize:11,fontWeight:800,color:'var(--mint-700)'}}>😄 매우 좋음</span>
+            <span style={{padding:'5px 10px',borderRadius:999,background:'#fff',fontSize:11,fontWeight:800,color:'var(--mint-700)'}}>활동 3건 완료</span>
+          </div>
+          <div style={{fontSize:11,color:'var(--mint-700)',marginTop:10,fontWeight:700}}>탭하여 오늘 하루 자세히 보기 →</div>
+        </div>
+      </button>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginTop:12}}>
+        {[['심박','72','#FBEAEA','#C56A6A','bpm'],['혈압','124/82','#E6EFFA','#1A4FB9','mmHg'],['수면','7.2h','#EFEAFB','#5A3FB5','오늘밤']].map(([l,v,bg,c,u])=>(
+          <div key={l} style={{background:bg,borderRadius:14,padding:'10px 12px',minWidth:0}}>
+            <div style={{fontSize:10,fontWeight:800,color:c}}>{l}</div>
+            <div style={{fontSize:16,fontWeight:800,marginTop:4,color:'var(--gray-900)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{v}</div>
+            <div style={{fontSize:9,color:'var(--gray-500)',marginTop:2}}>{u}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Photo of the day */}
+      <div className="card" style={{marginTop:12,padding:10}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8,padding:'0 4px'}}>
+          <div style={{fontSize:12,fontWeight:800,letterSpacing:'-0.01em'}}>📸 오늘의 한 컷</div>
+          <span style={{fontSize:10,color:'var(--gray-500)',fontWeight:700}}>14:20 · 복지관 산책</span>
+        </div>
+        <div style={{borderRadius:12,overflow:'hidden',aspectRatio:'16 / 10',background:'linear-gradient(135deg,#FBE8C8,#E8D8B0)',position:'relative',display:'flex',alignItems:'flex-end',padding:10}}>
+          <svg viewBox="0 0 200 120" style={{position:'absolute',inset:0,width:'100%',height:'100%'}}>
+            <circle cx="170" cy="22" r="14" fill="#FFD58A"/>
+            <path d="M0 90 Q50 70 100 80 Q150 90 200 78 L200 120 L0 120z" fill="#A4C99F"/>
+            <ellipse cx="60" cy="78" rx="14" ry="20" fill="#7BAA75"/>
+            <rect x="58" y="78" width="4" height="14" fill="#5A4030"/>
+          </svg>
+          <span style={{position:'relative',color:'#fff',fontSize:11,fontWeight:800,background:'rgba(0,0,0,.32)',padding:'3px 8px',borderRadius:99}}>마당 산책 중 미소</span>
+        </div>
+      </div>
+
+      {/* Today's activities mini */}
+      <div className="card" style={{marginTop:12}}>
+        <div style={{fontSize:12,fontWeight:800,marginBottom:8,display:'flex',justifyContent:'space-between'}}>
+          <span>오늘 활동 3건</span>
+          <span style={{fontSize:10,color:'var(--mint-700)'}}>전체보기 →</span>
+        </div>
+        {[
+          ['손가락 체조','10:15','10분 · 😄'],
+          ['건강수업','11:00','치매 예방 강의'],
+          ['그림 워크지','15:30','겨울 간식 맞추기'],
+        ].map(([n,t,d])=>(
+          <div key={n} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderTop:'1px solid #F0EDE3'}}>
+            <div>
+              <div style={{fontSize:13,fontWeight:800}}>{n}</div>
+              <div style={{fontSize:11,color:'var(--gray-500)'}}>{d}</div>
+            </div>
+            <div style={{fontSize:11,color:'var(--gray-500)',fontWeight:700}}>{t}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Caregiver message */}
+      <button onClick={()=>setStep(2)} style={{width:'100%',marginTop:12,padding:0,border:0,background:'transparent',cursor:'pointer',fontFamily:'inherit'}}>
+        <div className="card" style={{display:'flex',gap:10,alignItems:'flex-start',textAlign:'left'}}>
+          <div style={{width:36,height:36,borderRadius:'50%',background:'var(--mint-50)',color:'var(--mint-700)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ico.Family/></div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{display:'flex',gap:6,alignItems:'center'}}>
+              <span style={{fontSize:13,fontWeight:800}}>손고은 선생님</span>
+              <span style={{fontSize:10,color:'var(--gray-400)'}}>· 30분 전</span>
+            </div>
+            <div style={{fontSize:13,color:'var(--gray-700)',marginTop:4,lineHeight:1.45}}>"오늘 손가락 체조도 잘 하시고 점심도 다 드셨어요. 가족과 통화하셨다고 좋아하셨어요 😊"</div>
+            <div style={{fontSize:11,color:'var(--mint-700)',fontWeight:700,marginTop:6}}>답장 보내기 →</div>
+          </div>
+        </div>
+      </button>
+
+      {/* Quick actions */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginTop:12}}>
+        <button style={{padding:'14px',background:'#fff',border:0,borderRadius:14,boxShadow:'var(--shadow-sm)',fontFamily:'inherit',cursor:'pointer',display:'flex',gap:8,alignItems:'center',color:'var(--gray-900)'}}>
+          <div style={{width:32,height:32,borderRadius:10,background:'#E8F5EF',color:'var(--mint-700)',display:'flex',alignItems:'center',justifyContent:'center'}}><Ico.Phone/></div>
+          <div style={{textAlign:'left'}}><div style={{fontSize:12,fontWeight:800}}>영상통화</div><div style={{fontSize:10,color:'var(--gray-500)'}}>지금 가능</div></div>
+        </button>
+        <button style={{padding:'14px',background:'#fff',border:0,borderRadius:14,boxShadow:'var(--shadow-sm)',fontFamily:'inherit',cursor:'pointer',display:'flex',gap:8,alignItems:'center',color:'var(--gray-900)'}}>
+          <div style={{width:32,height:32,borderRadius:10,background:'#EFEAFB',color:'#5A3FB5',display:'flex',alignItems:'center',justifyContent:'center'}}><Ico.Camera/></div>
+          <div style={{textAlign:'left'}}><div style={{fontSize:12,fontWeight:800}}>면회 예약</div><div style={{fontSize:10,color:'var(--gray-500)'}}>수 14:00</div></div>
+        </button>
+      </div>
+
+      {/* Weekly summary */}
+      <div style={{marginTop:12,padding:'14px 16px',borderRadius:16,background:'linear-gradient(135deg,#FFF7E6,#FBF0D8)'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <div style={{fontSize:12,fontWeight:800,color:'#8C6F3F'}}>이번주 요약</div>
+          <span style={{fontSize:10,color:'#8C6F3F',fontWeight:700}}>5/5 ~ 5/11</span>
+        </div>
+        <div style={{display:'flex',justifyContent:'space-between',marginTop:10,gap:6}}>
+          {[['활동','14건'],['수면','평균 7.1h'],['기분','😄 5일']].map(([l,v])=>(
+            <div key={l} style={{flex:1,padding:'8px',background:'#fff',borderRadius:10,textAlign:'center'}}>
+              <div style={{fontSize:14,fontWeight:800,color:'#5A4A36',letterSpacing:'-0.01em'}}>{v}</div>
+              <div style={{fontSize:10,color:'var(--gray-500)',marginTop:2}}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  if(step===1) return (
+    <div style={{minHeight:'100%',background:'#F7FAF8'}}>
+      <div style={{padding:'14px 18px 0',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <button onClick={()=>setStep(0)} className="iconbtn"><Ico.Back/></button>
+        <div style={{fontSize:13,fontWeight:800}}>오늘 하루</div>
+        <button onClick={onDone} className="iconbtn"><Ico.X/></button>
+      </div>
+      <div style={{padding:'8px 20px'}}>
+        <div className="h-kick">2025년 5월 11일</div>
+        <div className="h-title">어머님의 하루</div>
+      </div>
+      <div style={{padding:'14px 20px 80px'}}>
+        {[
+          ['08:00','기상','잘 일어나셨어요',true],
+          ['09:30','아침 식사','평소 양 80%',true],
+          ['10:15','손가락 체조','10분 완료 · 😄',true],
+          ['11:00','건강수업','치매 예방 강의',true],
+          ['12:30','점심 식사','다 드셨어요',true],
+          ['14:00','산책','복지관 마당 15분',true],
+          ['15:30','워크지','겨울 간식 맞추기',true],
+          ['18:30','저녁 식사','진행 중',false],
+        ].map(([t,name,desc,done],i,arr)=>(
+          <div key={i} style={{display:'flex',gap:12,paddingBottom:14,borderLeft:i<arr.length-1?'2px solid #E8E3D4':'2px solid transparent',marginLeft:8,paddingLeft:16,position:'relative'}}>
+            <div style={{position:'absolute',left:-7,top:0,width:12,height:12,borderRadius:'50%',background:done?'var(--mint-500)':'#fff',border:done?'0':'2px solid var(--mint-300)'}}/>
+            <div style={{minWidth:50,fontSize:12,fontWeight:800,color:'var(--gray-500)'}}>{t}</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:14,fontWeight:800,letterSpacing:'-0.01em'}}>{name}</div>
+              <div style={{fontSize:12,color:'var(--gray-500)',marginTop:2}}>{desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{minHeight:'100%',background:'#fff',display:'flex',flexDirection:'column'}}>
+      <div style={{padding:'14px 18px 12px',display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'1px solid #f0eee9'}}>
+        <button onClick={()=>setStep(0)} className="iconbtn"><Ico.Back/></button>
+        <div>
+          <div style={{fontSize:13,fontWeight:800,textAlign:'center'}}>손고은 선생님</div>
+          <div style={{fontSize:10,color:'var(--mint-600)',textAlign:'center',fontWeight:700}}>● 활동 중</div>
+        </div>
+        <button onClick={onDone} className="iconbtn"><Ico.X/></button>
+      </div>
+      <div style={{flex:1,padding:'18px 16px',display:'flex',flexDirection:'column',gap:10,background:'#FBFBF7'}}>
+        <Bubble who="them" t="오늘 손가락 체조도 잘 하시고 점심도 다 드셨어요. 가족과 통화하셨다고 좋아하셨어요 😊"/>
+        <Bubble who="me" t="감사합니다 선생님 😊 잘 챙겨주셔서 늘 마음이 놓여요"/>
+        <Bubble who="them" t="별말씀을요. 다음주 가족 면회 예약은 수요일 오후로 잡아두었어요!"/>
+      </div>
+      <div style={{padding:12,borderTop:'1px solid #f0eee9',display:'flex',gap:8,alignItems:'center'}}>
+        <div style={{flex:1,padding:'10px 14px',background:'#F4F7FB',borderRadius:999,fontSize:13,color:'var(--gray-400)'}}>메시지 입력...</div>
+        <button className="iconbtn" style={{background:'var(--mint-600)',color:'#fff'}}><Ico.Mic/></button>
+      </div>
+    </div>
+  );
+}
+function Bubble({who,t}){
+  const me=who==='me';
+  return <div style={{display:'flex',justifyContent:me?'flex-end':'flex-start'}}>
+    <div style={{maxWidth:'78%',padding:'10px 14px',borderRadius:me?'16px 16px 4px 16px':'16px 16px 16px 4px',background:me?'var(--mint-600)':'#fff',color:me?'#fff':'var(--gray-900)',fontSize:13,lineHeight:1.45,boxShadow:me?'none':'var(--shadow-sm)'}}>{t}</div>
+  </div>
+}
+
+// ───── APP ─────
+function App(){
+  const [feat,setFeat] = useState(0);
+
+  const features = [
+    {kicker:'시니어 앱', name:'AI 맞춤 활동 추천', desc:'어제 기록을 보고 오늘 활동을 자동으로 추천'},
+    {kicker:'종사자 태블릿', name:'워크지 자동 생성', desc:'30초만에 한 사람을 위한 PDF 워크지'},
+    {kicker:'보호자 앱', name:'안심 리포트', desc:'부모님 하루를 AI가 요약·이상 신호 감지'},
+  ];
+
+  return <div className="stage">
+    <div className="left">
+      <div className="kicker">NEO Senior Suite · 시연</div>
+      <div className="title">3가지 핵심 기능<br/>딥링크 데모</div>
+      <div className="sub">왼쪽에서 기능을 선택하고, 오른쪽 화면의 버튼·카드를 직접 누르며 시연하세요.</div>
+      <div className="features">
+        {features.map((f,i)=>(
+          <div key={i} className={'feat'+(i===feat?' on':'')} onClick={()=>setFeat(i)}>
+            <div className="num">{i+1}</div>
+            <div>
+              <div style={{fontSize:11,color:'var(--mint-700)',fontWeight:800}}>{f.kicker}</div>
+              <div className="name">{f.name}</div>
+              <div className="desc">{f.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hint">💡 화면 안의 버튼·카드를 누르면 다음 화면으로 이동해요</div>
+    </div>
+    <div className="right">
+      {feat===0 && <SceneSenior/>}
+      {feat===1 && <SceneCaregiver/>}
+      {feat===2 && <SceneDaughter/>}
+    </div>
+  </div>
+}
+
+function PhoneShell({children}){return (
+  <div className="phone">
+    <div className="notch"/>
+    <div className="screen">
+      <div className="status"><span>9:30</span><span style={{fontFamily:'monospace'}}>●●● 📶 ◼</span></div>
+      <div className="content">{children}</div>
+    </div>
+  </div>
+)}
+
+function SceneSenior(){return (
+  <div className="scene">
+    <div className="bgWash sceneBg senior"/>
+    <PhoneShell><Flow_AI onDone={()=>{}}/></PhoneShell>
+    </div>
+)}
+
+function SceneCaregiver(){return (
+  <div className="scene tablet-scene">
+    <div className="bgWash sceneBg caregiver"/>
+    <div className="tablet">
+      <div className="tabletCam"/>
+      <div className="tabletScreen">
+        <Flow_Worksheet_Tablet onDone={()=>{}}/>
+      </div>
+    </div>
+    </div>
+)}
+
+function SceneDaughter(){return (
+  <div className="scene">
+    <div className="bgWash sceneBg daughter"/>
+    <PhoneShell><Flow_Family onDone={()=>{}}/></PhoneShell>
+    </div>
+)}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+
+
+</body></html>
