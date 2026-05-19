@@ -486,7 +486,7 @@ export const EDUCATION = {
 
 export const CONTACT = {
   email: 'goeunhand219@gmail.com',
-  resumePdf: './assets/pdfs/resume-jobkorea.pdf',
+  resumePdf: './assets/pdfs/resume-son-goeun.pdf',
   videos: [
     { id: 'V31xtw8Ym1k', title: "게이미피케이션 'THE EARTH PROJECT' 기획안" },
     { id: 'ItQpfh0H8Go', title: '포트폴리오 및 자기소개 영상' },
